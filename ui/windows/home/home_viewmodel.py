@@ -7,8 +7,7 @@ class HomeViewModel:
         """
         self.view = view
         """View의 시그널을 ViewModel의 핸들러에 연결합니다."""
-        #self.view.command_bar_widget.mode_selector.currentItemChanged.connect(self.on_mode_changed)
-        #self.view.command_bar_widget.log_action.triggered.connect(self.on_logview_clicked)
+        self.view.mainmenu_frame.action_logview.triggered.connect(self.on_logview_clicked)
 
     def on_mode_changed(self, route_key: str):
         """
