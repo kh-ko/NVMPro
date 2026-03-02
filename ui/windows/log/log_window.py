@@ -1,9 +1,8 @@
-from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 from PySide6.QtCore import Qt
-from qfluentwidgets import FluentWidget
 from ui.components.console_widget import ConsoleWidget
 
-class LogWindow(FluentWidget):
+class LogWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
@@ -15,7 +14,7 @@ class LogWindow(FluentWidget):
 
         # 타이틀바와의 간격을 위해 상단 마진(Top)을 40으로 늘림
         # 순서: (Left, Top, Right, Bottom)
-        self.main_layout.setContentsMargins(20, 40, 20, 20)
+        self.main_layout.setContentsMargins(10, 10, 10, 10)
 
         # ConsoleWidget 추가
         self.console_widget = ConsoleWidget(self)

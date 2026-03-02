@@ -5,8 +5,8 @@
 
 #3. 구현:
 ## 1) ui스레드가 아닌 다른 서비스 쓰레드에서 메세지를 추가할 수 있도록 스레드 안전하게 메세지를 추가하는 기능을 구현한다.
-## 2) PySide6 + qFluentWidget을 사용한다.
-### - 패키지 설치 : pip install pyside6 pyqt-fluent-widget
+## 2) PySide6 + qdarktheme을 사용한다.
+### - 패키지 설치 : pip install pyside6 pyqtdarktheme
 ## 3) QListWidget 상속받아 구현한다.
 ## 4) 메세지 종류에 따라 색상을 다르게 표시한다.
 
@@ -21,12 +21,9 @@
 import queue
 from enum import Enum, auto
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, 
-                               QListWidget, QListWidgetItem)
+                               QListWidget, QListWidgetItem, QCheckBox, QPushButton)
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QColor, QFont
-
-# qFluentWidget에서 CheckBox, PushButton 임포트
-from qfluentwidgets import CheckBox, PushButton
 
 class MsgType(Enum):
     INFO = auto()
@@ -72,7 +69,7 @@ class ConsoleWidget(QWidget):  # 기존 QListWidget 대신 QWidget 상속으로 
         # 체크박스들을 딕셔너리에 저장하여 관리
         self.checkboxes = {}
         for msg_type in MsgType:
-            cb = CheckBox(msg_type.name, self)
+            cb = QCheckBox(msg_type.name, self)
             cb.setChecked(True)
             cb.stateChanged.connect(self._update_filters_from_ui)
             
@@ -81,7 +78,7 @@ class ConsoleWidget(QWidget):  # 기존 QListWidget 대신 QWidget 상속으로 
             
         # 여백을 주고 오른쪽에 클리어 버튼 배치
         self.filter_layout.addStretch(1)
-        self.clear_btn = PushButton("Clear Logs", self)
+        self.clear_btn = QPushButton("Clear Logs", self)
         self.clear_btn.clicked.connect(self.clear_message)
         self.filter_layout.addWidget(self.clear_btn)
 
@@ -97,10 +94,6 @@ class ConsoleWidget(QWidget):  # 기존 QListWidget 대신 QWidget 상속으로 
                 padding: 0px;
             }
         """)
-        font = QFont("Consolas", 10)
-        font.setStyleHint(QFont.StyleHint.Monospace)
-        self.list_widget.setFont(font)
-        self.list_widget.setWordWrap(False) 
 
         # 레이아웃 조립
         self.main_layout.addLayout(self.filter_layout)
