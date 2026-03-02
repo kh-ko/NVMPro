@@ -10,6 +10,7 @@ from .sub_parts.home_position_frame import HomePositionFrame
 from .sub_parts.home_pressure_frame import HomePressureFrame
 from c_ui.b_components.b_composite.status_bar_widget import StatusBarWidget
 from c_ui.a_global.ntheme import NTheme
+from ._home_model import HomeViewModel
 
 class HomeWin(QWidget):
     def __init__(self):
@@ -22,8 +23,8 @@ class HomeWin(QWidget):
         self.main_layout = QVBoxLayout(self)
 
         # 2. CommandBar 추가
-        self.mainmenu_frame = HomeTopMenuFrame(self)
-        self.main_layout.addWidget(self.mainmenu_frame)
+        self.top_menu_frame = HomeTopMenuFrame(self)
+        self.main_layout.addWidget(self.top_menu_frame)
 
         # Body 영역 (상하 2등분 분리)
         # 상단: 차트 뷰 등이 차지할 영역 (나머지 공간 꽉 채움)
@@ -51,10 +52,10 @@ class HomeWin(QWidget):
 
         # CommandBar의 레이아웃 그림자가 아래 위젯(ChartWidget 등)에
         # 가려지지 않도록 Z-order를 최상단으로 끌어올립니다.
-        self.mainmenu_frame.raise_()
+        self.top_menu_frame.raise_()
 
         # UI 생성이 끝난 후 ViewModel 생성 및 View(self) 주입
-        #self.viewmodel = HomeViewModel(self)
+        self.viewmodel = HomeViewModel(self)
 
         self.theme_manager = NTheme()  # 싱글톤이므로 어디서 호출하든 같은 객체입니다.
         self.theme_manager.theme_changed.connect(self._apply_theme_colors)
