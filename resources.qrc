@@ -1,6 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
     <file>assets/fonts/D2Coding.ttf</file>
+    <file>assets/fonts/MaterialIcons-Regular.ttf</file>
     <file>assets/icons/nova_icon.ico</file>
 </qresource>
 </RCC>

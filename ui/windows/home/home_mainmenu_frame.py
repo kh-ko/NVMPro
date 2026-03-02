@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (QFrame, QToolBar, QVBoxLayout, QWidget, QSizePolicy, QToolButton)
-from PySide6.QtGui import QAction, QActionGroup
+from PySide6.QtGui import QAction, QActionGroup, QFont
 from PySide6.QtCore import Qt
 from ui.theme.ntheme import NTheme 
 
@@ -17,7 +17,6 @@ class HomeMainMenuFrame(QFrame):
         self.toolbar.setObjectName("mainToolBar")
         self.toolbar.setMovable(False)   
         self.toolbar.setFloatable(False) 
-        #self.toolbar.setToolButtonStyle(Qt.ToolButtonTextOnly) 
         
         self.layout.addWidget(self.toolbar)
 
@@ -59,35 +58,22 @@ class HomeMainMenuFrame(QFrame):
         self.toolbar.addAction(self.action_help)
 
         # ---------------------------------------------------------
-        # [핵심 해결책] 내가 추가한 Action에 해당하는 버튼들에만 특정 속성(menuBtn) 부여
+        # 내가 추가한 Action에 해당하는 일반 버튼들에만 'menuBtn' 속성 부여
         # ---------------------------------------------------------
         for action in self.toolbar.actions():
             widget = self.toolbar.widgetForAction(action)
             if isinstance(widget, QToolButton):
-                # 내부적으로 생성되는 QToolButton에 'menuBtn'이라는 속성을 True로 줍니다.
                 widget.setProperty("menuBtn", True)
                 widget.setToolButtonStyle(Qt.ToolButtonTextOnly)
-
-        # ---------------------------------------------------------
-        # [핵심 해결책] 숨겨진 툴바 확장 버튼을 찾아내서 강제 수정!
-        # ---------------------------------------------------------        
-        # Qt가 내부적으로 생성하는 확장 버튼의 기본 objectName은 "qt_toolbar_ext_button" 입니다.
-        ext_button = self.toolbar.findChild(QToolButton, "qt_toolbar_ext_button")
-        if ext_button:
-            # 1. 크기를 넉넉하게 강제로 고정 (찌그러짐 방지)
-            ext_button.setFixedSize(32, 32) 
-            
-            # 2. 버튼 스타일을 텍스트 모드로 바꾸고, 텍스트를 "..."으로 지정
-            ext_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
-            ext_button.setText("...")
-            
-            # (선택) 확장 버튼도 테마 색상을 따라가게 하려면 동일한 속성 부여
-            ext_button.setProperty("menuBtn", True)
 
     def _apply_theme_colors(self, theme_name=None):
         frame_bg_color = self.theme_manager.get_color("frame_bg_color")
         btn_hover_color = self.theme_manager.get_color("btn_hover_color")
         separator_color = self.theme_manager.get_color("separator_color")
+
+        # 확장 버튼에 넣을 텍스트(유니코드). 파이썬 문자열로 처리하여 QSS에 주입합니다.
+        # \ue5d4 는 Material Icons의 'more_vert' (세로 점 3개) 입니다.
+        ext_icon_text = "\ue5cc"
 
         self.setStyleSheet(f"""
             QFrame#homeMainMenuFrame {{
@@ -101,7 +87,7 @@ class HomeMainMenuFrame(QFrame):
                 spacing: 0px; 
             }}
             
-            /* [핵심 해결책] 모든 QToolButton이 아니라 menuBtn 속성이 True인 버튼만 디자인 */
+            /* 일반 메뉴 버튼 디자인 */
             QToolButton[menuBtn="true"] {{
                 background: transparent;
                 border: none;
@@ -123,5 +109,23 @@ class HomeMainMenuFrame(QFrame):
                 width: 1px;
                 background-color: {separator_color};
                 margin: 8px 4px; 
+            }}
+
+            /* ---------------------------------------------------------
+               [아이콘 폰트 적용] 툴바 확장 버튼(...) 스타일 제어
+               --------------------------------------------------------- */
+            QToolButton#qt_toolbar_ext_button {{
+                /* 아이콘 폰트 지정 및 텍스트 모드 강제 */
+                qproperty-toolButtonStyle: ToolButtonTextOnly;
+                qproperty-text: "{ext_icon_text}";
+                font-family: "Material Icons";
+                
+                background: transparent;
+                border: none;
+                border-radius: 4px;
+            }}
+
+            QToolButton#qt_toolbar_ext_button:hover {{
+                background-color: {btn_hover_color}; 
             }}
         """)

@@ -34,6 +34,10 @@ def main():
     else:
         print("[경고] D2Coding 폰트를 리소스에서 로드하는데 실패했습니다.")
 
+    font_id = QFontDatabase.addApplicationFont("assets/fonts/MaterialIcons-Regular.ttf")
+    if font_id == -1:
+        print("Material Icons 폰트 로드 실패!")
+
     window = HomeWindow()
     window.show()
     
