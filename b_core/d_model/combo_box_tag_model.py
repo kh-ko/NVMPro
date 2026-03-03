@@ -27,14 +27,20 @@ class ComboBoxTagModel(TagModel):
         
         self.Options = parsed_options
 
+        self._signals.optionsChanged.emit()
+
     def add_option(self, label: str, value: int | float | str) -> None:
         """
         콤보박스의 맨 끝에 새로운 항목을 하나 추가합니다.
         """
         self.Options.append(ComboItem(Label=label, Value=value))
 
+        self._signals.optionsChanged.emit()
+
     def clear_options(self) -> None:
         """
         콤보박스의 모든 항목을 비웁니다.
         """
         self.Options.clear()
+
+        self._signals.optionsChanged.emit()

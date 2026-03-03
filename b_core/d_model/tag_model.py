@@ -36,6 +36,10 @@ class E_ComponentType(StrEnum):
     COMBO_BOX       = "ComboBox"
     CHECK_BOX       = "CheckBox"    
 
+class TagSignals(QObject):
+    readValueChanged = Signal()
+    optionsChanged = Signal()
+
 class TagModel(BaseModel):
     Name: str = ""
     IsUsed: bool = True
@@ -51,3 +55,29 @@ class TagModel(BaseModel):
     # Python 3.10+ 전용: Union 대신 | 기호 사용으로 가독성 극대화
     ReadValue: int | float | str | None = None
     WriteValue: int | float | str | None = None
+
+    # Pydantic V2: 값 할당 시 유효성 검사 수행
+    model_config = ConfigDict(validate_assignment=True)
+
+    # 2. Pydantic 모델 필드에서 제외되는 Private 속성으로 시그널 객체 생성
+    # (이렇게 하면 json() 변환이나 딕셔너리 변환 시 시그널 객체가 방해하지 않습니다)
+    _signals: TagSignals = PrivateAttr(default_factory=TagSignals)
+
+    # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
+    @property
+    def readValueChanged(self):
+        return self._signals.readValueChanged
+
+    # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
+    @property
+    def optionsChanged(self):
+        return self._signals.optionsChanged        
+
+    # 4. 속성 할당(대입) 이벤트 가로채기
+    def update_read_value(self, new_value: int | float | str | None):
+        """통신 스레드 등에서 ReadValue를 갱신할 때 이 메서드를 사용하세요."""
+        if self.ReadValue == new_value:
+            return
+
+        self.ReadValue = new_value
+        self.readValueChanged.emit() # 값이 진짜 바뀌었을 때만 시그널 발생
