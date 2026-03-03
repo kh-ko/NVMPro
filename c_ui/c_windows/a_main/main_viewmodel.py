@@ -1,9 +1,9 @@
 from b_core.a_manager.log_manager import LogManager
 
-class HomeViewModel:
+class MainViewModel:
     def __init__(self, view):
         """
-        HomeWindow (view) 인스턴스를 주입받아 이벤트와 데이터 로직을 연결합니다.
+        MainWindow (view) 인스턴스를 주입받아 이벤트와 데이터 로직을 연결합니다.
         """
         self.view = view
         """View의 시그널을 ViewModel의 핸들러에 연결합니다."""

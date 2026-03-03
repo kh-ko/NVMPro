@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QFrame
 from c_ui.a_global.ntheme import NTheme
 
-class HomePositionFrame(QFrame):
+class MainPositionFrame(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("homePositionFrame")
+        self.setObjectName("mainPositionFrame")
 
         self.theme_manager = NTheme()
         self.theme_manager.theme_changed.connect(self._apply_theme_colors)
@@ -24,7 +24,7 @@ class HomePositionFrame(QFrame):
 
         # QSS(Qt Style Sheets)를 이용해 현재 프레임의 색상을 변경합니다.
         self.setStyleSheet(f"""
-            QFrame#homePositionFrame {{
+            QFrame#mainPositionFrame {{
                 background-color: {frame_bg_color}; 
                 border-right: 1px solid {border_color};
                 border-radius: 0px;

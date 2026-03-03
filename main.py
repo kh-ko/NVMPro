@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon, QFontDatabase, QFont
 import resources_rc  # 직접 생성하신 리소스 파일을 임포트해야 아이콘/폰트가 로드됩니다.
 from c_ui.a_global.ntheme import NTheme
-from c_ui.c_windows.a_home.home_win import HomeWin
+from c_ui.c_windows.a_main.main_win import MainWin
 
 def main():
     # 1. Windows AppUserModelID 설정 (작업 표시줄 그룹화 및 아이콘 분리)
@@ -38,7 +38,7 @@ def main():
     if font_id == -1:
         print("[경고] Material Icons 폰트를 리소스에서 로드하는데 실패했습니다.")
 
-    window = HomeWin()
+    window = MainWin()
     window.show()
     
     sys.exit(app.exec())

@@ -3,10 +3,10 @@ from PySide6.QtGui import QAction, QActionGroup, QFont
 from PySide6.QtCore import Qt
 from c_ui.a_global.ntheme import NTheme 
 
-class HomeTopMenuFrame(QFrame):
+class MainTopMenuFrame(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("homeTopMenuFrame")
+        self.setObjectName("mainTopMenuFrame")
         self.setFixedHeight(42)
 
         self.layout = QVBoxLayout(self)
@@ -83,7 +83,7 @@ class HomeTopMenuFrame(QFrame):
         ext_icon_text = "\ue5cc"
 
         self.setStyleSheet(f"""
-            QFrame#homeMainMenuFrame {{
+            QFrame#mainMainMenuFrame {{
                 background-color: {frame_bg_color};
                 border: none;
             }}
