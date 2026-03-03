@@ -29,6 +29,12 @@ class ComboBoxTagModel(TagModel):
 
         self._signals.optionsChanged.emit()
 
+    # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
+    @property
+    def optionsChanged(self):
+        return self._signals.optionsChanged        
+    # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
+    
     def add_option(self, label: str, value: int | float | str) -> None:
         """
         콤보박스의 맨 끝에 새로운 항목을 하나 추가합니다.

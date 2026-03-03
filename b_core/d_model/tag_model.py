@@ -39,6 +39,7 @@ class E_ComponentType(StrEnum):
 class TagSignals(QObject):
     readValueChanged = Signal()
     optionsChanged = Signal()
+    rangeChanged = Signal()
 
 class TagModel(BaseModel):
     Name: str = ""
@@ -68,10 +69,15 @@ class TagModel(BaseModel):
     def readValueChanged(self):
         return self._signals.readValueChanged
 
+    @property
+    def minChanged(self):
+        return self._signals.minChanged
+
     # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
     @property
-    def optionsChanged(self):
-        return self._signals.optionsChanged        
+    def maxChanged(self):
+        return self._signals.maxChanged     
+        
 
     # 4. 속성 할당(대입) 이벤트 가로채기
     def update_read_value(self, new_value: int | float | str | None):

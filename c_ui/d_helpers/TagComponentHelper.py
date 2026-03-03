@@ -33,7 +33,7 @@ class TagComponentHelper:
             
             # ComboBox 타입일 경우
             if tag_obj.DefaultComponent == "ComboBox" or isinstance(tag_obj, ComboBoxTagModel):
-                combo = QComboBox()
+                combo = ComboBoxTagModel()
                 if isinstance(tag_obj, ComboBoxTagModel):
                     for option in tag_obj.Options:
                         combo.addItem(option.Label, option.Value)
@@ -41,12 +41,12 @@ class TagComponentHelper:
 
             # InputNumber 타입일 경우
             elif tag_obj.DefaultComponent == "InputNumber":
-                widget = QLineEdit()
+                widget = InputNumberTagModel()
                 # 필요시 QIntValidator 등 추가 가능
 
             # 그 외 기본 위젯
             else:
-                widget = QLineEdit()
+                widget = InputNumberTagModel()
 
             # 레이아웃에 추가 및 딕셔너리 저장
             if widget:
