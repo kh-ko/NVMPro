@@ -1,7 +1,9 @@
-from PySide6.QtWidgets import (QFrame, QToolBar, QVBoxLayout, QToolButton)
-from PySide6.QtGui import QAction, QActionGroup, QFont
+from PySide6.QtWidgets import QFrame, QHBoxLayout
+from PySide6.QtGui import QAction
 from PySide6.QtCore import Qt
+from c_ui.b_components.a_custom.base_tool_bar import BaseToolBar
 from c_ui.a_global.ntheme import NTheme 
+from c_ui.b_components.a_custom.base_switch_button import BaseSwitchButton
 
 class MainTopMenuFrame(QFrame):
     def __init__(self, parent=None):
@@ -9,43 +11,41 @@ class MainTopMenuFrame(QFrame):
         self.setObjectName("mainTopMenuFrame")
         self.setFixedHeight(42)
 
-        self.layout = QVBoxLayout(self)
-        
-        self.toolbar = QToolBar(self)
+        # 1. 가로 배치(QHBoxLayout)
+        self.layout = QHBoxLayout(self)
+        self.layout.setContentsMargins(10, 0, 10, 0)
+        self.layout.setSpacing(10) # 위젯 사이의 간격
+
+        # 2. Local / Remote 커스텀 스위치 추가
+        # (생성 시 파라미터로 라벨을 바로 넘길 수 있습니다)
+        self.acc_switch = BaseSwitchButton("Local", "Remote", self)   
+        self.layout.addWidget(self.acc_switch)
+
+        # 3. 위젯 사이의 세로 구분선 (Visual Separator)
+        self.separator = QFrame(self)
+        self.separator.setFrameShape(QFrame.VLine) # 세로줄
+        self.separator.setFrameShadow(QFrame.Plain)
+        self.separator.setObjectName("menuSeparator")
+        self.layout.addWidget(self.separator)
+
+        # 4. 일반 메뉴 툴바 추가
+        self.toolbar = BaseToolBar(self)
         self.toolbar.setObjectName("mainToolBar")
-        self.toolbar.setMovable(False)   
-        self.toolbar.setFloatable(False) 
-        
         self.layout.addWidget(self.toolbar)
+
+        # 5. 남는 여백을 우측으로 밀어주어 왼쪽 정렬 유지
+        self.layout.addStretch()
 
         self._setup_actions()
 
+        # 테마 매니저 연동
         self.theme_manager = NTheme()
         self.theme_manager.theme_changed.connect(self._apply_theme_colors)        
 
         self._apply_design()
 
     def _setup_actions(self):
-        # 1. Local / Remote 토글 버튼
-        self.action_local = QAction("Local", self)
-        self.action_local.setCheckable(True)
-        self.action_local.setChecked(True)
-
-        self.action_remote = QAction("Remote", self)
-        self.action_remote.setCheckable(True)
-
-        self.mode_group = QActionGroup(self)
-        self.mode_group.addAction(self.action_local)
-        self.mode_group.addAction(self.action_remote)
-        self.mode_group.setExclusive(True)
-
-        self.toolbar.addAction(self.action_local)
-        self.toolbar.addAction(self.action_remote)
-        
-        # 2. 구분선
-        self.toolbar.addSeparator()
-
-        # 3. 일반 메뉴 버튼들
+        # 툴바에는 순수한 일반 메뉴 Action들만 추가합니다.
         self.action_connection = QAction("Connection", self)
         self.action_parameter = QAction("Parameter", self)
         self.action_logview = QAction("LogView", self)
@@ -56,83 +56,27 @@ class MainTopMenuFrame(QFrame):
         self.toolbar.addAction(self.action_logview)
         self.toolbar.addAction(self.action_help)
 
-        # ---------------------------------------------------------
-        # 내가 추가한 Action에 해당하는 일반 버튼들에만 'menuBtn' 속성 부여
-        # ---------------------------------------------------------
-        for action in self.toolbar.actions():
-            widget = self.toolbar.widgetForAction(action)
-            if isinstance(widget, QToolButton):
-                widget.setProperty("menuBtn", True)
-                widget.setToolButtonStyle(Qt.ToolButtonTextOnly)
-
-    # 테마에 상관없이 일정하게 적용되는 디자인
     def _apply_design(self):
-        self.layout.setContentsMargins(10, 0, 10, 0) 
-        self.layout.setSpacing(0)
-
         self._apply_theme_colors()
 
-    # 테마에 따라 적용되는 색상또는 색상과 함께 적용되어지는 속성들(sheet로 함께 적용되어지는 것들)
     def _apply_theme_colors(self, theme_name=None):
         frame_bg_color = self.theme_manager.get_color("frame_bg_color")
-        btn_hover_color = self.theme_manager.get_color("btn_hover_color")
         separator_color = self.theme_manager.get_color("separator_color")
 
-        # 확장 버튼에 넣을 텍스트(유니코드). 파이썬 문자열로 처리하여 QSS에 주입합니다.
-        # \ue5d4 는 Material Icons의 'more_vert' (세로 점 3개) 입니다.
-        ext_icon_text = "\ue5cc"
-
+        # QPushButton과 관련된 스타일은 CustomModeSwitch에서 알아서 처리하므로 
+        # 여기서는 프레임과 구분선 스타일만 남깁니다.
         self.setStyleSheet(f"""
-            QFrame#mainMainMenuFrame {{
+            QFrame#mainTopMenuFrame {{
                 background-color: {frame_bg_color};
                 border: none;
             }}
             
-            QToolBar#mainToolBar {{
-                background: transparent;
-                border: none;
-                spacing: 0px; 
-            }}
-            
-            /* 일반 메뉴 버튼 디자인 */
-            QToolButton[menuBtn="true"] {{
-                background: transparent;
-                border: none;
-                border-radius: 4px;
-                padding: 6px 12px;
-            }}
-            
-            QToolButton[menuBtn="true"]:hover {{
-                background-color: {btn_hover_color}; 
-            }}
-            
-            QToolButton[menuBtn="true"]:checked {{
-                background-color: palette(highlight); 
-                color: palette(highlighted-text);
-                font-weight: bold;
-            }}
-            
-            QToolBar::separator {{
-                width: 1px;
-                background-color: {separator_color};
-                margin: 8px 4px; 
-            }}
-
-            /* ---------------------------------------------------------
-               [아이콘 폰트 적용] 툴바 확장 버튼(...) 스타일 제어
-               --------------------------------------------------------- */
-            QToolButton#qt_toolbar_ext_button {{
-                /* 아이콘 폰트 지정 및 텍스트 모드 강제 */
-                qproperty-toolButtonStyle: ToolButtonTextOnly;
-                qproperty-text: "{ext_icon_text}";
-                font-family: "Material Icons";
-                
-                background: transparent;
-                border: none;
-                border-radius: 4px;
-            }}
-
-            QToolButton#qt_toolbar_ext_button:hover {{
-                background-color: {btn_hover_color}; 
+            /* 세로 구분선 색상 지정 */
+            QFrame#menuSeparator {{
+                color: {separator_color};
+                min-width: 1px;
+                max-width: 1px;
+                min-height: 20px;
+                max-height: 20px;
             }}
         """)
