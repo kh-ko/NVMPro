@@ -12,7 +12,8 @@
 #}
 
 from enum import StrEnum
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, PrivateAttr
+from PySide6.QtCore import QObject, Signal
 
 # Python 3.11+ 전용: 내장 StrEnum 사용 (문자열과 완벽 호환)
 class E_AccType(StrEnum):
@@ -68,16 +69,6 @@ class TagModel(BaseModel):
     @property
     def readValueChanged(self):
         return self._signals.readValueChanged
-
-    @property
-    def minChanged(self):
-        return self._signals.minChanged
-
-    # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
-    @property
-    def maxChanged(self):
-        return self._signals.maxChanged     
-        
 
     # 4. 속성 할당(대입) 이벤트 가로채기
     def update_read_value(self, new_value: int | float | str | None):
