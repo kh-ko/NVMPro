@@ -1,71 +1,58 @@
 {
-    "Folders": [
-        {
-            "Name": "App Mode",
-            "Folders": [],
-            "Tags": [
-                { "Name": "Mode"     , "AccType": "RW", "DefaultComponent": "ComboBox", "DataType": "Base10", "Options": [ {"Label": "Service Staff", "Value": 0}, {"Label": "Operator", "Value": 1}]}
+    "Tags": [
+        { "Path": "App Settings", "Name": "Mode"       , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options": [ {"Label": "Service Staff", "Value": 0}, {"Label": "Operator", "Value": 1}]},
+        { "Path": "Connection"  , "Name": "Port"       , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options": [] },
+        { "Path": "Connection"  , "Name": "Network"    , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options": 
+            [
+                {"Label": "Multiple Devices", "Value": 0}, 
+                {"Label": "Point to Point"  , "Value": 1}
             ]
         },
-        {
-            "Name": "Connection",
-            "Folders": [],
-            "Tags": [
-                { "Name": "Port"       , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":[] },
-                { "Name": "Network"    , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "Multiple Devices", "Value": 0}, 
-                        {"Label": "Point to Point"  , "Value": 1}
-                    ]
-                },
-                { "Name": "Address"    , "AccType": "RW", "DefaultComponent": "InputNumber", "DataType": "Base10"},
-                { "Name": "Termination", "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "CR+LF", "Value": 0}, 
-                        {"Label": "LF", "Value": 1}, 
-                        {"Label": "CR", "Value": 2}
-                    ]
-                },
-                { "Name": "BaudRate"   , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "300"   , "Value": 300   }, 
-                        {"Label": "1200"  , "Value": 1200  }, 
-                        {"Label": "2400"  , "Value": 2400  },
-                        {"Label": "4800"  , "Value": 4800  }, 
-                        {"Label": "9600"  , "Value": 9600  }, 
-                        {"Label": "19200" , "Value": 19200 },
-                        {"Label": "38400" , "Value": 38400 }, 
-                        {"Label": "57600" , "Value": 57600 }, 
-                        {"Label": "115200", "Value": 115200},
-                        {"Label": "230400", "Value": 230400}
-                    ]
-                },
-                { "Name": "Data Bits"   , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "5", "Value": 5}, 
-                        {"Label": "6", "Value": 6}, 
-                        {"Label": "7", "Value": 7}, 
-                        {"Label": "8", "Value": 8}
-                    ]
-                },
-                { "Name": "Parity"      , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "None" , "Value": 0}, 
-                        {"Label": "Odd"  , "Value": 1},
-                        {"Label": "Even" , "Value": 2},
-                        {"Label": "Mark" , "Value": 3},
-                        {"Label": "Space", "Value": 4}
-                    ]
-                },
-                { "Name": "Stop Bits"   , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Base10", "Options":
-                    [ 
-                        {"Label": "1"   , "Value": 0}, 
-                        {"Label": "1.5" , "Value": 1},
-                        {"Label": "2"   , "Value": 2}
-                    ]
-                }
+        { "Path": "Connection"  , "Name": "Address"    , "AccType": "RW", "DefaultComponent": "InputNumber", "DataType": "Number"},
+        { "Path": "Connection"  , "Name": "Termination", "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
+            [ 
+                {"Label": "CR+LF", "Value": 0}, 
+                {"Label": "LF", "Value": 1}, 
+                {"Label": "CR", "Value": 2}
             ]
-        }
-    ],
-    "Tags": []
+        },
+        { "Path": "Connection"  , "Name": "BaudRate"   , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
+            [ 
+                {"Label": "300"   , "Value": 300   }, 
+                {"Label": "1200"  , "Value": 1200  }, 
+                {"Label": "2400"  , "Value": 2400  },
+                {"Label": "4800"  , "Value": 4800  }, 
+                {"Label": "9600"  , "Value": 9600  }, 
+                {"Label": "19200" , "Value": 19200 },
+                {"Label": "38400" , "Value": 38400 }, 
+                {"Label": "57600" , "Value": 57600 }, 
+                {"Label": "115200", "Value": 115200},
+                {"Label": "230400", "Value": 230400}
+            ]
+        },
+        { "Path": "Connection"  , "Name": "Data Bits"  , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
+            [ 
+                {"Label": "5", "Value": 5}, 
+                {"Label": "6", "Value": 6}, 
+                {"Label": "7", "Value": 7}, 
+                {"Label": "8", "Value": 8}
+            ]
+        },
+        { "Path": "Connection"  , "Name": "Parity"     , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
+            [ 
+                {"Label": "None" , "Value": 0}, 
+                {"Label": "Odd"  , "Value": 1},
+                {"Label": "Even" , "Value": 2},
+                {"Label": "Mark" , "Value": 3},
+                {"Label": "Space", "Value": 4}
+            ]
+        },
+        { "Path": "Connection"  , "Name": "Stop Bits"  , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
+            [ 
+                {"Label": "1"   , "Value": 0}, 
+                {"Label": "1.5" , "Value": 1},
+                {"Label": "2"   , "Value": 2}
+            ]
+        }   
+    ]
 }

@@ -6,13 +6,16 @@
 #  "IsSettingValue": false, // 초기값은 false 이고, 백업기능 구현시 SettingValue 인것만 백업하도록 구현할 예정
 #  "AccType": "RW", // 초기값은 "RW" 이고, 읽기/쓰기 관련한 속성을 지정함 ("RW", "RO", "WO")
 #  "DefaultComponent": "", // 초기값은 "" 이고, UI 만들때 기본적으로 매칭될 Custom 컴포넌트 클래스를 지정함.
+#  "DisplayValue": "", // 초기값은 "" 이고, UI Component와 연결되때 화면에 표시되어야할 문구(DataType이 Enum일 경우 Options의 Label을 사용하기 위해 사용될 예정).
 #  "DataType": "Base10", // 초기값은 "Base10" 이고, Value가 어떤 포멧의 데이터인지 지정함("Base10", "Base16", "Base36", "Base16_Float" ... 등등)
-#  "ReadValue": ??, // 패킷에서 읽어온 값이 설정되며... DataType에 따라 int, float, string 등이 될수 있다. 파이썬에서 이럴경우 데이터 타입을 어떻게 지정하지?
-#  "WriteValue": ??, // UI에서 사용자에 의해 지정된 값이며, DataType에 따라 int, float, string 등이 될수 있다. 파이썬에서 이럴경우 데이터 타입을 어떻게 지정하지?
+#  "RemoteValue": null, // 패킷에서 읽어온 값이 설정, 패킷의 데이타 타입을 보고 변환해서 알맞은 값으로 설정된다.(예 패킷에서 Hex 코드로 오지만 RemoteValue에서는 int값으로 저장할 수 있다.)
+#  "LocalWriteValue": null, // UI에서 사용자에 의해 지정된 값
+#  "MinMaxRange": null, float 이나 int 타입일 경우 min max값이 지정될 때가 있는데 이를 표현하기 위해 필요. min-max 제한이 없는 경우 null
+#  "Options": [], // data type 이 enum일 경우 UI의 Combobox와 연계될 정보
 #}
 
 from enum import StrEnum
-from pydantic import BaseModel, ConfigDict, PrivateAttr
+from pydantic import BaseModel, ConfigDict, PrivateAttr, Field
 from PySide6.QtCore import QObject, Signal
 
 # Python 3.11+ 전용: 내장 StrEnum 사용 (문자열과 완벽 호환)
@@ -23,11 +26,10 @@ class E_AccType(StrEnum):
 
 class E_DataType(StrEnum):
     STR          = "Str"
-    BASE10       = "Base10"
-    BASE16       = "Base16"
-    BASE36       = "Base36"
-    BASE10_FLOAT = "Base10_Float"
-    BASE16_FLOAT = "Base16_Float"
+    NUMBER       = "Number"
+    FLOAT        = "Float"
+    ENUM         = "Enum"
+    BOOL         = "Bool"    
 
 class E_ComponentType(StrEnum):
     LABEL           = "Label"
@@ -37,26 +39,35 @@ class E_ComponentType(StrEnum):
     COMBO_BOX       = "ComboBox"
     CHECK_BOX       = "CheckBox"    
 
+class ComboItem(BaseModel):
+    Label: str
+    Value: int | float | str
+    IsEnable: bool = True
+
 class TagSignals(QObject):
-    readValueChanged = Signal()
+    remoteValueChanged = Signal()
+    displayValueChanged = Signal()
     optionsChanged = Signal()
     rangeChanged = Signal()
 
 class TagModel(BaseModel):
-    Name: str = ""
+    Path: str
+    Name: str
     IsUsed: bool = True
     IsProtocolError: bool = False
     IsOnlyLocalAccess: bool = False
     IsSettingValue: bool = False
     
-    # 깔끔하게 Enum 타입 지정
+    # 스키마가 모델에 맞춰질 예정이므로 깔끔하게 Enum 타입 적용
     AccType: E_AccType = E_AccType.RW 
-    DefaultComponent: str = ""
-    DataType: E_DataType = E_DataType.BASE10 
+    DefaultComponent: E_ComponentType = E_ComponentType.LABEL 
+    DataType: E_DataType = E_DataType.NUMBER 
     
-    # Python 3.10+ 전용: Union 대신 | 기호 사용으로 가독성 극대화
-    ReadValue: int | float | str | None = None
-    WriteValue: int | float | str | None = None
+    DisplayValue: str = ""
+    RemoteValue: int | float | bool | str | None = None
+    LocalWriteValue: int | float | bool | str | None = None
+    MinMaxRange: tuple[int | float | None, int | float | None] | None = None
+    Options: list[ComboItem] = Field(default_factory=list)
 
     # Pydantic V2: 값 할당 시 유효성 검사 수행
     model_config = ConfigDict(validate_assignment=True)
@@ -67,14 +78,74 @@ class TagModel(BaseModel):
 
     # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
     @property
-    def readValueChanged(self):
-        return self._signals.readValueChanged
+    def remoteValueChanged(self):
+        return self._signals.remoteValueChanged
+
+    @property
+    def displayValueChanged(self):
+        return self._signals.displayValueChanged        
+
+    @property
+    def optionsChanged(self):
+        return self._signals.optionsChanged
+
+    @property
+    def rangeChanged(self):
+        return self._signals.rangeChanged
 
     # 4. 속성 할당(대입) 이벤트 가로채기
-    def update_read_value(self, new_value: int | float | str | None):
-        """통신 스레드 등에서 ReadValue를 갱신할 때 이 메서드를 사용하세요."""
-        if self.ReadValue == new_value:
+    def update_remote_value(self, new_value: int | float | bool | str | None):
+        """통신 스레드 등에서 RemoteValue 갱신할 때 이 메서드를 사용하세요."""
+        if self.RemoteValue == new_value:
             return
 
-        self.ReadValue = new_value
-        self.readValueChanged.emit() # 값이 진짜 바뀌었을 때만 시그널 발생
+        self.RemoteValue = new_value        
+        self.remoteValueChanged.emit() # 값이 진짜 바뀌었을 때만 시그널 발생
+
+        # DataType이 ENUM일 경우 Options에서 대응하는 Label을 찾아 DisplayValue 업데이트
+        # 최적화: '==' 대신 'is' 사용
+        if self.DataType is E_DataType.ENUM and self.Options:
+            matched_label = next((item.Label for item in self.Options if item.Value == new_value), str(new_value))
+            if self.DisplayValue != matched_label:
+                self.DisplayValue = matched_label
+                self.displayValueChanged.emit()
+        else:
+            # 일반 값일 경우 단순 문자열 변환 (None 방지 처리)
+            new_display = str(new_value) if new_value is not None else ""
+            if self.DisplayValue != new_display:
+                self.DisplayValue = new_display
+                self.displayValueChanged.emit()
+
+    def set_options(self, new_options: list[dict | ComboItem]) -> None:
+        """
+        콤보박스의 전체 항목을 새로운 리스트로 교체합니다.
+        dict 형태의 리스트나 ComboItem 객체 리스트 모두 처리 가능합니다.
+        """
+        parsed_options = []
+        for opt in new_options:
+            if isinstance(opt, dict):
+                parsed_options.append(ComboItem(**opt))
+            elif isinstance(opt, ComboItem):
+                parsed_options.append(opt)
+            else:
+                raise ValueError("항목은 dict 또는 ComboItem 객체여야 합니다.")
+        
+        self.Options = parsed_options
+
+        self.optionsChanged.emit()    
+
+    def set_range(self, min_val: int | float | None, max_val: int | float | None):
+        """
+        런타임에 Min, Max 값을 변경하고 UI에 알립니다.
+        (min_val 또는 max_val에 None을 넣으면 해당 방향은 무한대/제한없음을 의미합니다.)
+        """
+        # 둘 다 None으로 들어오면 범위 제한 자체를 없애는 것으로 간주
+        if min_val is None and max_val is None:
+            new_range = None
+        else:
+            new_range = (min_val, max_val)
+
+        # 기존 범위와 다를 때만 업데이트 및 시그널 발생
+        if self.MinMaxRange != new_range:
+            self.MinMaxRange = new_range
+            self.rangeChanged.emit()               

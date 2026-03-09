@@ -1,7 +1,7 @@
 import json
 from PySide6.QtCore import QFile, QIODevice
 from b_core.d_model.tag_model import TagModel
-from b_core.d_model.combo_box_tag_model import ComboBoxTagModel
+# from b_core.d_model.combo_box_tag_model import ComboBoxTagModel  <- 더 이상 필요 없음 (TagModel에 완벽 통합됨)
 
 # 1. 폴더 구조를 담기 위한 데이터 클래스
 class TagFolder:
@@ -27,7 +27,7 @@ class TagManager:
         self.root_folder = TagFolder("Root")
         
         # 빠른 검색을 위한 평면(Flat) 딕셔너리 
-        # Key: "폴더명/태그명" (예: "Connection/Valve_01")
+        # Key: "Path/Name" (예: "Connection/BaudRate")
         self._flat_tags: dict[str, TagModel] = {}
 
     def load_from_json(self, file_path: str) -> None:
@@ -46,66 +46,62 @@ class TagManager:
         # 기존 데이터 초기화
         self._init_manager()
 
-        # 재귀적 파싱 시작 (최상위 raw_data를 루트 폴더에 매핑)
-        self._parse_node(raw_data, self.root_folder, current_path="")
-
-    def _parse_node(self, node_data: dict, current_folder: TagFolder, current_path: str) -> None:
-        """폴더와 태그를 재귀적으로 파싱하는 내부 로직"""
-        
-        # 1. 현재 노드의 태그들 파싱
-        for tag_data in node_data.get("Tags", []):
+        # 평탄화된 배열 파싱 시작
+        for tag_data in raw_data.get("Tags", []):
             tag_name = tag_data.get("Name")
             if not tag_name:
                 continue
+                
+            path_str = tag_data.get("Path", "")
 
-            component_type = tag_data.get("DefaultComponent", "")
-            
             try:
-                # 팩토리 로직
-                if component_type == "ComboBox":
-                    tag_obj = ComboBoxTagModel(**tag_data)
-                else:
-                    tag_obj = TagModel(**tag_data)
+                # 1. 이전 단계에서 완성한 강력한 TagModel로 객체 생성 (분기 불필요)
+                tag_obj = TagModel.model_validate(tag_data)
 
-                # 폴더 객체에 태그 추가
-                current_folder.tags[tag_name] = tag_obj
+                # 2. Path 문자열을 분석하여 폴더 객체 가져오기 (없으면 자동 생성)
+                target_folder = self._get_or_create_folder(path_str)
 
-                # 빠른 검색용 Flat 딕셔너리에 추가 (경로 조합)
-                full_path = f"{current_path}/{tag_name}" if current_path else tag_name
+                # 3. 폴더 객체에 태그 추가
+                target_folder.tags[tag_name] = tag_obj
+
+                # 4. 빠른 검색용 Flat 딕셔너리에 추가 (경로 조합)
+                full_path = f"{path_str}/{tag_name}" if path_str else tag_name
                 self._flat_tags[full_path] = tag_obj
 
             except Exception as e:
                 print(f"[{tag_name}] 태그 객체 생성 중 오류: {e}")
 
-        # 2. 현재 노드의 하위 폴더들 파싱 (재귀 호출)
-        for folder_data in node_data.get("Folders", []):
-            folder_name = folder_data.get("Name")
-            if not folder_name:
-                continue
-
-            # 새 폴더 객체 생성 및 연결
-            new_folder = TagFolder(folder_name)
-            current_folder.folders[folder_name] = new_folder
-
-            # 하위 경로 생성 (예: "Connection" -> "Connection/SubFolder")
-            new_path = f"{current_path}/{folder_name}" if current_path else folder_name
+    def _get_or_create_folder(self, path: str) -> TagFolder:
+        """
+        주어진 경로(예: 'Connection/Network')에 해당하는 폴더 객체를 반환합니다.
+        중간 경로 폴더가 없다면 자동으로 생성하여 트리를 구성합니다.
+        """
+        if not path:
+            return self.root_folder
             
-            # 자기 자신을 다시 호출하여 깊이 들어감
-            self._parse_node(folder_data, new_folder, new_path)
+        current = self.root_folder
+        parts = path.split("/")
+        
+        for part in parts:
+            if part not in current.folders:
+                current.folders[part] = TagFolder(part)
+            current = current.folders[part]
+            
+        return current
 
     # --- 유틸리티 메서드 ---
 
-    def get_tag(self, path: str) -> TagModel | None:
+    def get_tag(self, full_path: str) -> TagModel | None:
         """
         절대 경로를 사용하여 태그를 `O(1)` 속도로 반환합니다.
-        예: manager.get_tag("Connection/Valve_01")
+        예: manager.get_tag("Connection/BaudRate")
         """
-        return self._flat_tags.get(path)
+        return self._flat_tags.get(full_path)
 
     def get_folder(self, path: str) -> TagFolder | None:
         """
         특정 경로의 폴더 객체를 반환합니다.
-        예: manager.get_folder("Connection/MotorGroup")
+        예: manager.get_folder("Connection")
         """
         if not path or path == "Root":
             return self.root_folder
@@ -156,12 +152,11 @@ class TagManager:
                 branch = "└─" if is_last else "├─"
                 
                 # ComboBox의 Options 속성일 경우 리스트 내부까지 예쁘게 전개해서 출력
-                if key == "Options" and isinstance(val, list):
+                if key == "Options" and isinstance(val, list) and len(val) > 0:
                     print(f"{detail_indent}{branch} {key}:")
                     for j, opt in enumerate(val):
                         opt_branch = "└─" if j == len(val) - 1 else "├─"
-                        # opt는 딕셔너리 형태 {'Label': 'Auto', 'Value': 1}
-                        print(f"{detail_indent}    {opt_branch} Label: '{opt['Label']}', Value: {opt['Value']}")
+                        # 새로 추가하신 IsEnable 속성도 함께 출력되도록 반영
+                        print(f"{detail_indent}    {opt_branch} Label: '{opt['Label']}', Value: {opt['Value']}, IsEnable: {opt.get('IsEnable', True)}")
                 else:
-                    # 일반 속성 출력 (예: ├─ DataType: Base10)
                     print(f"{detail_indent}{branch} {key}: {val}")
