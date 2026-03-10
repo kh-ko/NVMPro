@@ -116,6 +116,20 @@ class TagManager:
                 return None
         return current
 
+    def get_tags_in_folder(self, path: str) -> list[TagModel]:
+        """
+        특정 경로(폴더)에 직접 속해 있는 태그 객체들의 리스트를 반환합니다.
+        경로가 잘못되었거나 태그가 없다면 빈 리스트를 반환합니다.
+        예: manager.get_tags_in_folder("Connection")
+        """
+        folder = self.get_folder(path)
+        
+        if folder:
+            # 딕셔너리의 value(TagModel 객체)들만 뽑아서 리스트로 변환하여 반환
+            return list(folder.tags.values())
+        
+        return []
+
     @property
     def total_tag_count(self) -> int:
         return len(self._flat_tags)

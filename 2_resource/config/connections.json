@@ -1,0 +1,26 @@
+[
+    {
+        "baudrate": 9600,
+        "dataBits": 8,
+        "isSelect": false,
+        "name": "9600",
+        "parity": 0,
+        "stopBits": 2
+    },
+    {
+        "baudrate": 38400,
+        "dataBits": 7,
+        "isSelect": true,
+        "name": "38400",
+        "parity": 2,
+        "stopBits": 1
+    },
+    {
+        "baudrate": 115200,
+        "dataBits": 8,
+        "isSelect": false,
+        "name": "115200",
+        "parity": 0,
+        "stopBits": 1
+    }
+]

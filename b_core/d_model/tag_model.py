@@ -12,11 +12,13 @@
 #  "LocalWriteValue": null, // UI에서 사용자에 의해 지정된 값
 #  "MinMaxRange": null, float 이나 int 타입일 경우 min max값이 지정될 때가 있는데 이를 표현하기 위해 필요. min-max 제한이 없는 경우 null
 #  "Options": [], // data type 이 enum일 경우 UI의 Combobox와 연계될 정보
+#  "EnableCondition": TagModel로 만들어진 TagWidget간에 활성화 조건 정보(조건의 영향력은 해당 Window에 한정된다.)
 #}
 
 from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, PrivateAttr, Field
 from PySide6.QtCore import QObject, Signal
+from typing import Optional, Dict, Any
 
 # Python 3.11+ 전용: 내장 StrEnum 사용 (문자열과 완벽 호환)
 class E_AccType(StrEnum):
@@ -33,6 +35,7 @@ class E_DataType(StrEnum):
 
 class E_ComponentType(StrEnum):
     LABEL           = "Label"
+    INPUT_STR       = "InputText"
     INPUT_NUM       = "InputNumber"
     INPUT_HEX       = "InputHex"
     INPUT_FLOAT     = "InputFloat"
@@ -45,6 +48,8 @@ class ComboItem(BaseModel):
     IsEnable: bool = True
 
 class TagSignals(QObject):
+    isUsedChanged = Signal()
+    isProtocolErrorChanged = Signal()
     remoteValueChanged = Signal()
     displayValueChanged = Signal()
     optionsChanged = Signal()
@@ -69,6 +74,8 @@ class TagModel(BaseModel):
     MinMaxRange: tuple[int | float | None, int | float | None] | None = None
     Options: list[ComboItem] = Field(default_factory=list)
 
+    EnableCondition: Optional[Dict[str, Any]] = None
+
     # Pydantic V2: 값 할당 시 유효성 검사 수행
     model_config = ConfigDict(validate_assignment=True)
 
@@ -77,6 +84,14 @@ class TagModel(BaseModel):
     _signals: TagSignals = PrivateAttr(default_factory=TagSignals)
 
     # 3. 외부(Widget)에서 접근하기 쉽도록 property로 시그널 노출
+    @property
+    def isUsedChanged(self):
+        return self._signals.isUsedChanged
+    
+    @property
+    def isProtocolErrorChanged(self):
+        return self._signals.isProtocolErrorChanged
+    
     @property
     def remoteValueChanged(self):
         return self._signals.remoteValueChanged
@@ -115,6 +130,9 @@ class TagModel(BaseModel):
             if self.DisplayValue != new_display:
                 self.DisplayValue = new_display
                 self.displayValueChanged.emit()
+    
+    def write_to_tag(self, value: int | float | bool | str | None):
+        self.LocalWriteValue = value
 
     def set_options(self, new_options: list[dict | ComboItem]) -> None:
         """
@@ -149,3 +167,10 @@ class TagModel(BaseModel):
         if self.MinMaxRange != new_range:
             self.MinMaxRange = new_range
             self.rangeChanged.emit()               
+
+    def reset_remote_value(self):
+        self.RemoteValue = None
+        self.remoteValueChanged.emit()
+
+    def reset_local_write_value(self):
+        self.LocalWriteValue = None
