@@ -26,9 +26,7 @@ class ConnectionWinModel(QObject):
         self._pending_restart = False 
         self._pending_close = False
 
-        self.protocol = {}
-        self.protocol.request = "i:83"
-        self.protocol.response = "i:83"
+        self.protocol = {"request": "i:83", "response": "i:83"}
         self.scan_worker = ConnectionWorker()
         self.scan_worker.progress_signal.connect(self.on_scan_progress)
         self.scan_worker.finished_signal.connect(self.on_scan_finished)
@@ -88,7 +86,7 @@ class ConnectionWinModel(QObject):
         # 2. 스캔 중 다시 'Scan Port'를 눌러서 취소 후 재시작하는 경우
         if self._pending_restart:
             self._pending_restart = False
-            self.scan_start(self.protocol, ...)  # 취소가 완료되었으니 안전하게 다시 시작
+            self.scan_worker.start_scan(self.protocol, self.view.network_tag_widget.tag_model.RemoteValue, self.view.address_tag_widget.tag_model.RemoteValue, self.view.baudrate_tag_widget.tag_model.RemoteValue, self.view.databits_tag_widget.tag_model.RemoteValue, self.view.parity_tag_widget.tag_model.RemoteValue, self.view.stopbits_tag_widget.tag_model.RemoteValue, self.view.termination_tag_widget.tag_model.RemoteValue)
             return
 
     def on_connect_clicked(self):
@@ -101,7 +99,9 @@ class ConnectionWinModel(QObject):
     def on_new_settings_clicked(self):
         new_data = {}
         new_data["isSelect"] = True
-        self.selected_data["isSelect"] = False
+        if self.selected_data is not None:
+            self.selected_data["isSelect"] = False
+            
         self.connections_data.append(new_data)
         self.__update_connection_data_by_ui(new_data)
         
@@ -163,12 +163,12 @@ class ConnectionWinModel(QObject):
                 selected_data["termination"] = self.view.termination_tag_widget.tag_model.LocalWriteValue
             if self.view.baudrate_tag_widget is not None:
                 selected_data["baudrate"] = self.view.baudrate_tag_widget.tag_model.LocalWriteValue
-            if self.view.dataBits_tag_widget is not None:
-                selected_data["dataBits"] = self.view.dataBits_tag_widget.tag_model.LocalWriteValue
+            if self.view.databits_tag_widget is not None:
+                selected_data["dataBits"] = self.view.databits_tag_widget.tag_model.LocalWriteValue
             if self.view.parity_tag_widget is not None:
                 selected_data["parity"] = self.view.parity_tag_widget.tag_model.LocalWriteValue
-            if self.view.stopBits_tag_widget is not None:
-                selected_data["stopBits"] = self.view.stopBits_tag_widget.tag_model.LocalWriteValue
+            if self.view.stopbits_tag_widget is not None:
+                selected_data["stopBits"] = self.view.stopbits_tag_widget.tag_model.LocalWriteValue
 
         TagWidgetHelper().reset_tag_local_value(self.view.tag_comp_list)
 

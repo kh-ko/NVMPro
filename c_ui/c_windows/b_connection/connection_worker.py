@@ -69,7 +69,7 @@ class ConnectionWorker(QThread):
             resp_str = ""
             # resp_str = SerialPortManager().scan(item.Value, self.baudrate, self.databits, self.parity, self.stopbits, self.protocol.request)
 
-            if resp_str and getattr(self.protocol, "response", None) and resp_str.startswith(self.protocol.response):
+            if resp_str and self.protocol.get("response", None) and resp_str.startswith(self.protocol.get("response")):
                 item.Label = f"COM{item.Value} : {resp_str}" # (예시) 응답 내용으로 라벨 변경
             else:
                 item.Label = f"COM{item.Value} : Unknown Device"
