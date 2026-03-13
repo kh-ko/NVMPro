@@ -63,6 +63,11 @@ class PacketParams:
     request: str = ""
     termination: int = 0
 
+@dataclass(slots=True)
+class PortCheckRespParams:
+    port: str = ""
+    
+
 # [입력용] 3. Queue 전달 객체
 @dataclass(slots=True)
 class SvcRequest:
@@ -77,5 +82,6 @@ class SvcResponse:
     cmd_result: E_SvcPortCmdResult = E_SvcPortCmdResult.SUCCESS
     rcv_str: str = ""
     error_msg: str = ""
+    params: PortCheckRespParams | None = None    
     callback: Optional[Callable] = None
     cancel_token: Optional[CancelToken] = None  # ★ 토큰 추가

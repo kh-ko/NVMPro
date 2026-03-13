@@ -5,7 +5,7 @@ from PySide6.QtCore import QThread, Signal, QIODevice
 from PySide6.QtSerialPort import QSerialPort 
 from b_core.a_manager.log_manager import LogManager
 from c_ui.b_components.b_composite.console_widget import MsgType
-from svc_port_datatype import SvcRequest, SvcResponse, ConnectionParams, PacketParams, E_Command, E_SvcPortState, E_SvcPortCmdResult
+from svc_port_datatype import SvcRequest, SvcResponse, ConnectionParams, PacketParams, E_Command, E_SvcPortState, E_SvcPortCmdResult, PortCheckRespParams
 
 
 # ==========================================
@@ -183,6 +183,7 @@ class SvcPortWorker(QThread):
                             response.cmd_result = result
                             response.rcv_str = rcv_str
                             response.error_msg = err_msg
+                            response.params = PortCheckRespParams(port=params.port)
                         else:
                             response.cmd_result = E_SvcPortCmdResult.PARAM_ERROR
                             response.error_msg = "Invalid parameters for PortCheck"

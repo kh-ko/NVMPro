@@ -8,6 +8,8 @@ from PySide6.QtSerialPort import QSerialPortInfo
 from b_core.e_define.file_folder_define import CONNECTIONS_JSON_FILE
 from b_core.a_manager.log_manager import LogManager
 from b_core.d_model.tag_model import ComboItem
+from b_core.b_service.svc_port_service import SvcPortService
+from b_core.b_service.svc_port_datatype import CancelToken, ConnectionParams, SvcResponse, E_SvcPortCmdResult, PortCheckRespParams
 from c_ui.b_components.a_custom.custom_pushbutton import CustomButton
 from c_ui.d_helpers.tag_widget_helper import TagWidgetHelper
 from c_ui.d_helpers.json_helper import JsonHelper
@@ -23,23 +25,10 @@ class ConnectionWinModel(QObject):
         self.selected_index = -1
         self.connections_data = JsonHelper().load_json(CONNECTIONS_JSON_FILE)
 
-        self._pending_restart = False 
-        self._pending_close = False
-
-        self.protocol = {"request": "i:83", "response": "i:83"}
-        self.scan_worker = ConnectionWorker()
-        self.scan_worker.progress_signal.connect(self.on_scan_progress)
-        self.scan_worker.finished_signal.connect(self.on_scan_finished)
+        self.cancel_token = CancelToken()
 
     def on_win_close(self):
-        if self.scan_worker and self.scan_worker.is_running():
-            self._pending_close = True  # 스레드 종료 후 윈도우를 닫도록 예약
-            self.scan_worker.cancel()   # Worker 내부의 루프를 멈추는 플래그 활성화 메서드 호출
-            
-            # (선택) View 화면에 "포트 스캔 취소 중..." 같은 로딩창이나 메시지를 띄우면 좋습니다.
-            print("스캔 취소 진행 중... 윈도우 종료를 대기합니다.")
-            return False # 아직 닫지 마! (View에서 event.ignore() 처리 필요)
-        
+        self.cancel_token.cancel()
         return True
 
     def on_toolbar_action(self, action):
@@ -66,31 +55,61 @@ class ConnectionWinModel(QObject):
         self.__set_connection_info(index)       
                     
     def on_scan_port_clicked(self):
-        if self.scan_worker and self.scan_worker.is_running():
-            self._pending_restart = True
-            self.scan_worker.cancel()
-        else:
-            self.scan_worker.start_scan(self.protocol, self.view.network_tag_widget.tag_model.RemoteValue, self.view.address_tag_widget.tag_model.RemoteValue, self.view.baudrate_tag_widget.tag_model.RemoteValue, self.view.databits_tag_widget.tag_model.RemoteValue, self.view.parity_tag_widget.tag_model.RemoteValue, self.view.stopbits_tag_widget.tag_model.RemoteValue, self.view.termination_tag_widget.tag_model.RemoteValue)
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Com Port Scan")
+        msg_box.setText("Would you like to apply the changes and scan for ports?")
+        msg_box.setIcon(QMessageBox.Icon.Question)
+        btn_apply_scan = msg_box.addButton("Apply and Scan", QMessageBox.ButtonRole.AcceptRole)
+        btn_cancel = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+        msg_box.exec()
+        if msg_box.clickedButton() == btn_apply_scan:
+            self.on_save_settings_clicked()
 
-    def on_scan_progress(self, index, size, result):
-        if self.view.port_tag_widget is not None:
-            if self.view.port_tag_widget.tag_model is not None:
-                if index == 0:
-                    self.view.port_tag_widget.tag_model.set_options(result)
-                else:
-                    self.view.port_tag_widget.tag_model.edit_options(result)
+            params = ConnectionParams(
+                port="",
+                network=self.view.network_tag_widget.tag_model.RemoteValue,
+                address=self.view.address_tag_widget.tag_model.RemoteValue,
+                baudrate=self.view.baudrate_tag_widget.tag_model.RemoteValue,
+                databits=self.view.databits_tag_widget.tag_model.RemoteValue,
+                parity=self.view.parity_tag_widget.tag_model.RemoteValue,
+                stopbits=self.view.stopbits_tag_widget.tag_model.RemoteValue,
+                termination=self.view.termination_tag_widget.tag_model.RemoteValue,
+                request="i:83"
+            )
+            SvcPortService().port_check(params, self.on_scan_result, self.cancel_token)
+        elif msg_box.clickedButton() == btn_cancel:
+            pass
 
-    def on_scan_finished(self):
-        if self._pending_close:
-            self._pending_close = False
-            self.view.close()  # 이제 안전하게 실제 윈도우 닫기 실행
+    def on_scan_result(self, response: SvcResponse):
+        if response.cancel_token and response.cancel_token.is_canceled:
             return
 
-        # 2. 스캔 중 다시 'Scan Port'를 눌러서 취소 후 재시작하는 경우
-        if self._pending_restart:
-            self._pending_restart = False
-            self.scan_worker.start_scan(self.protocol, self.view.network_tag_widget.tag_model.RemoteValue, self.view.address_tag_widget.tag_model.RemoteValue, self.view.baudrate_tag_widget.tag_model.RemoteValue, self.view.databits_tag_widget.tag_model.RemoteValue, self.view.parity_tag_widget.tag_model.RemoteValue, self.view.stopbits_tag_widget.tag_model.RemoteValue, self.view.termination_tag_widget.tag_model.RemoteValue)
+        if response.params is None:
             return
+
+        port_name = response.params.port
+        description = ""
+        enable = False
+
+        if response.cmd_result == E_SvcPortCmdResult.PORT_OPEN_ERROR:
+            # already used device
+            description = "already in use."
+        elif response.cmd_result == E_SvcPortCmdResult.PORT_ERROR:
+            # unknown device
+            description = "unknown device."
+        elif response.cmd_result == E_SvcPortCmdResult.CMD_ERROR:
+            # unknown error
+            description = "unknown error."
+        elif response.cmd_result == E_SvcPortCmdResult.PARAM_ERROR:
+            # unknown error
+            description = "unknown error."
+        elif response.cmd_result == E_SvcPortCmdResult.SYS_ERROR:
+            # unknown error
+            description = "unknown error."
+        elif response.cmd_result == E_SvcPortCmdResult.SUCCESS:
+            enable = True
+            description = response.rcv_str
+        
 
     def on_connect_clicked(self):
         pass
