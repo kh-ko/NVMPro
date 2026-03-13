@@ -9,7 +9,7 @@
                 {"Label": "Point to Point"  , "Value": 1}
             ]
         },
-        { "Path": "Connection"  , "Name": "Address"    , "AccType": "RW", "DefaultComponent": "InputNumber", "DataType": "Number", "EnableCondition": 
+        { "Path": "Connection"  , "Name": "Address"    , "AccType": "RW", "DefaultComponent": "InputText"  , "DataType": "Str"   , "EnableCondition": 
             {
                 "TargetPath": "Connection",
                 "TargetName": "Network",
@@ -48,9 +48,9 @@
         { "Path": "Connection"  , "Name": "Parity"     , "AccType": "RW", "DefaultComponent": "ComboBox"   , "DataType": "Enum"  , "Options":
             [ 
                 {"Label": "None" , "Value": 0}, 
-                {"Label": "Odd"  , "Value": 1},
+                {"Label": "Odd"  , "Value": 3},
                 {"Label": "Even" , "Value": 2},
-                {"Label": "Mark" , "Value": 3},
+                {"Label": "Mark" , "Value": 5},
                 {"Label": "Space", "Value": 4}
             ]
         },

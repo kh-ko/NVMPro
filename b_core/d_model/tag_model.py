@@ -53,6 +53,7 @@ class TagSignals(QObject):
     remoteValueChanged = Signal()
     displayValueChanged = Signal()
     optionsChanged = Signal()
+    optionsUpdated = Signal()
     rangeChanged = Signal()
 
 class TagModel(BaseModel):
@@ -105,6 +106,10 @@ class TagModel(BaseModel):
         return self._signals.optionsChanged
 
     @property
+    def optionsUpdated(self):
+        return self._signals.optionsUpdated        
+
+    @property
     def rangeChanged(self):
         return self._signals.rangeChanged
 
@@ -151,6 +156,24 @@ class TagModel(BaseModel):
         self.Options = parsed_options
 
         self.optionsChanged.emit()    
+
+    def edit_options(self, new_options: list[dict | ComboItem]) -> None:
+        """
+        콤보박스의 전체 항목을 새로운 리스트로 교체합니다.
+        dict 형태의 리스트나 ComboItem 객체 리스트 모두 처리 가능합니다.
+        """
+        parsed_options = []
+        for opt in new_options:
+            if isinstance(opt, dict):
+                parsed_options.append(ComboItem(**opt))
+            elif isinstance(opt, ComboItem):
+                parsed_options.append(opt)
+            else:
+                raise ValueError("항목은 dict 또는 ComboItem 객체여야 합니다.")
+        
+        self.Options = parsed_options
+
+        self.optionsUpdated.emit()          
 
     def set_range(self, min_val: int | float | None, max_val: int | float | None):
         """

@@ -72,10 +72,13 @@ class ConnectionWinModel(QObject):
         else:
             self.scan_worker.start_scan(self.protocol, self.view.network_tag_widget.tag_model.RemoteValue, self.view.address_tag_widget.tag_model.RemoteValue, self.view.baudrate_tag_widget.tag_model.RemoteValue, self.view.databits_tag_widget.tag_model.RemoteValue, self.view.parity_tag_widget.tag_model.RemoteValue, self.view.stopbits_tag_widget.tag_model.RemoteValue, self.view.termination_tag_widget.tag_model.RemoteValue)
 
-    def on_scan_progress(self, result):
+    def on_scan_progress(self, index, size, result):
         if self.view.port_tag_widget is not None:
             if self.view.port_tag_widget.tag_model is not None:
-                self.view.port_tag_widget.tag_model.set_options(result)
+                if index == 0:
+                    self.view.port_tag_widget.tag_model.set_options(result)
+                else:
+                    self.view.port_tag_widget.tag_model.edit_options(result)
 
     def on_scan_finished(self):
         if self._pending_close:
@@ -101,7 +104,7 @@ class ConnectionWinModel(QObject):
         new_data["isSelect"] = True
         if self.selected_data is not None:
             self.selected_data["isSelect"] = False
-            
+
         self.connections_data.append(new_data)
         self.__update_connection_data_by_ui(new_data)
         
@@ -128,7 +131,7 @@ class ConnectionWinModel(QObject):
         self.selected_index = index
         self.selected_data = self.connections_data[index]
 
-        TagWidgetHelper().reset_tag_remote_value()
+        TagWidgetHelper().reset_tag_remote_value(self.view.tag_comp_list)
 
         for tag in self.view.tag_list:
             if tag.Name == "Name":
@@ -173,6 +176,8 @@ class ConnectionWinModel(QObject):
         TagWidgetHelper().reset_tag_local_value(self.view.tag_comp_list)
 
         JsonHelper().save_json(CONNECTIONS_JSON_FILE, self.connections_data)
+
+        #view 쪽에서 리스트를 갱신하면서 자동으로 on_selected_connection 가 호출되어서 selected_data 가 업데이트됨
         self.view.init_connection_list()
 
     def __get_available_ports(self):

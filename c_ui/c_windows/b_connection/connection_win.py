@@ -178,7 +178,6 @@ class ConnectionWin(QWidget):
             self.button_group.deleteLater()
 
         self.button_group = QButtonGroup(self)
-        self.button_group
 
         self.button_group.idToggled.connect(self.model.on_selected_connection)
 

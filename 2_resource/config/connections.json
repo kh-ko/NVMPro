@@ -2,7 +2,7 @@
     {
         "baudrate": 9600,
         "dataBits": 8,
-        "isSelect": false,
+        "isSelect": true,
         "name": "9600",
         "parity": 0,
         "stopBits": 2
@@ -10,7 +10,7 @@
     {
         "baudrate": 38400,
         "dataBits": 7,
-        "isSelect": true,
+        "isSelect": false,
         "name": "38400",
         "parity": 2,
         "stopBits": 1

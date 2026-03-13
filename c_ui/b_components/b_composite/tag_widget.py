@@ -145,6 +145,24 @@ class TagWidget(QWidget):
 
             self.update_ui_state()
 
+    def on_options_updated(self):
+        # 콤보 박스일 때만 동작
+        if self.component_type == E_ComponentType.COMBO_BOX:
+            # 아이템 갱신 중 원치 않는 user_input_changed 시그널 발생을 방지
+            self._is_internal_updating = True
+            
+            combo = self.value_widget
+            new_options = self.tag_model.Options
+
+            for i, opt in enumerate(new_options):
+                if combo.itemText(i) != opt.Label:
+                    combo.setItemText(i, opt.Label)
+                    
+            # 갱신 완료 후 시그널 다시 활성화
+            self._is_internal_updating = False
+
+            self.update_ui_state()            
+
     def on_range_changed(self):
         min_val, max_val = None, None
         comp_type = self.component_type

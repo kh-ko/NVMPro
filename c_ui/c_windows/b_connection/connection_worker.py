@@ -5,7 +5,7 @@ from b_core.d_model.tag_model import ComboItem  # 사용 중인 ComboItem 경로
 
 class ConnectionWorker(QThread):
     # 쓰레드에서 UI(메인 쓰레드)로 데이터를 안전하게 전달하기 위한 Signal 정의
-    progress_signal = Signal(list)
+    progress_signal = Signal(int, int, list)
     finished_signal = Signal()
 
     def __init__(self, parent=None):
@@ -59,9 +59,10 @@ class ConnectionWorker(QThread):
             )
             valid_combo_items.append(item)
 
-            self.progress_signal.emit(valid_combo_items)
+            safe_items = [ComboItem(Label=i.Label, Value=i.Value, IsEnable=i.IsEnable) for i in valid_combo_items]
+            self.progress_signal.emit(0, len(valid_combo_items), safe_items)
         
-        for item in valid_combo_items:
+        for index, item in enumerate(valid_combo_items):
             with QMutexLocker(self._mutex):
                 if self._is_cancelled:
                     break
@@ -74,6 +75,7 @@ class ConnectionWorker(QThread):
             else:
                 item.Label = f"COM{item.Value} : Unknown Device"
 
-            self.progress_signal.emit(valid_combo_items)
+            safe_items = [ComboItem(Label=i.Label, Value=i.Value, IsEnable=i.IsEnable) for i in valid_combo_items]
+            self.progress_signal.emit(index + 1, len(valid_combo_items), safe_items)
 
         self.finished_signal.emit()
